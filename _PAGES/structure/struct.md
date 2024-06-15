@@ -1,6 +1,6 @@
 ---
 layout: default
-title: 솔루션 구성도
+title: structure
 nav_order: 2
 ---
 
