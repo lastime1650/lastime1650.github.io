@@ -2,11 +2,12 @@
 layout: default
 title: structure
 nav_order: 2
-typora-root-url: ../
+typora-root-url: ../../
 ---
 
 # 보안 솔루션의 구성도를 설명합니다.
 
 ### 현재 적용된 보안 솔루션의 구조를 사진과 함께 서술하여, 전체적인 흐름을 서술합니다.
 
-![img](../img/struct_img.png)
+![img](/img/struct_img.png)
+
