@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Hardware_ID
-nav_order: 1
+nav_order: 2
 permalink: /pages/AGENT/Hardware_info
 parent: AGENT
 typora-root-url: ../../../
