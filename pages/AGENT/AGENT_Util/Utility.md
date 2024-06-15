@@ -1,10 +1,10 @@
 ---
 layout: default
-title: AGENT_Utility
+title: Agent_Utility
 nav_order: 6
-permalink: /pages/AGENT
+permalink: /pages/AGENT/AGENT_Util
 parent: AGENT
-typora-root-url: ../../
+typora-root-url: ../../../
 ---
 
 # **커널에서 구현한 유틸리티 함수들을 설명합니다.**
@@ -25,3 +25,4 @@ typora-root-url: ../../
 - HANDLE, 과 절대경로를 건네면 파일 입출력 (읽기, 쓰기)이 가능한 함수
 - bcrypt.h 를 이용하여 바이트값을 전달하면 SHA256으로 해싱하는 함수
 - PID 에서 EPROCESS를 이용하여 HANDLE값 추출
+
