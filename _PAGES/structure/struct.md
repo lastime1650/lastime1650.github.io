@@ -2,7 +2,6 @@
 layout: default
 title: 솔루션 구성도
 nav_order: 2
-description: "제품 구성도"
 ---
 
 # 보안 솔루션의 구성도를 설명합니다.
