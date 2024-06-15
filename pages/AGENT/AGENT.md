@@ -1,6 +1,6 @@
 ---
 layout: default
-title: 에이전트
+title: AGENT
 nav_order: 3
 typora-root-url: ../../
 ---
