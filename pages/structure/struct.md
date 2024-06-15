@@ -1,6 +1,6 @@
 ---
 layout: default
-title: structure
+title: 전체 구성도
 nav_order: 2
 permalink: /pages/structure
 typora-root-url: ../../
