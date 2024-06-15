@@ -5,7 +5,7 @@ nav_order: 1
 permalink: /pages/AGENT/Socket/AGENT_Socket_processing
 parent: AGENT_Socket
 grand_parent: AGENT
-typora-root-url: ../../../
+typora-root-url: ../../../../
 ---
 
 # **커널에서 중앙서버의 요청을 처리하는 방법을 설명합니다.**
@@ -27,3 +27,4 @@ typora-root-url: ../../../
 - 에이전트 활성화 여부확인
 - 에이전트에게 SHA256하나 전달하여 바이너리 받기
 - ObRegisterCallback에 적용할 보호조치 등록
+

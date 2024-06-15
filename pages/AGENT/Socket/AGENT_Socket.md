@@ -4,6 +4,7 @@ title: AGENT_Socket
 nav_order: 1
 permalink: /pages/AGENT/Socket
 parent: AGENT
+has_children: true
 typora-root-url: ../../../
 ---
 
