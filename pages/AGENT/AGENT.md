@@ -2,7 +2,7 @@
 layout: default
 title: AGENT
 nav_order: 3
-permalink: /pages/AGENT/Hardware_info
+permalink: /pages/AGENT
 has_children: true
 typora-root-url: ../../
 ---
