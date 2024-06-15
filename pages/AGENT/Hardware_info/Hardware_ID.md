@@ -13,67 +13,19 @@ typora-root-url: ../../../
 
 
 
-```c
-// ACPI 테이블을 읽는 예제 코드 (매우 간단히 설명)
-NTSTATUS status;
-ULONG tableSize;
-SYSTEM_FIRMWARE_TABLE_INFORMATION* firmwareTableInfo;
-ULONG bufferSize = sizeof(SYSTEM_FIRMWARE_TABLE_INFORMATION) + 1024;
-
-firmwareTableInfo = (SYSTEM_FIRMWARE_TABLE_INFORMATION*)ExAllocatePoolWithTag(PagedPool, bufferSize, 'RSMB'); //먼저 어느정도 길이를 가져와야하는 것으로 확인.(쿼리 전, Hint정보를 필드에 넣고 쿼리하기 때문) 
-if (!firmwareTableInfo) {
-    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "메모리 공간 부족\n");
-    return STATUS_INSUFFICIENT_RESOURCES;
-}
-
-RtlZeroMemory(firmwareTableInfo, bufferSize);
-firmwareTableInfo->ProviderSignature = 'RSMB'; // ACPI 시그니처 설정
-firmwareTableInfo->Action = SystemFirmwareTable_Get; // " Enum " 으로 펌웨어 정보 가져오도록함 
+------
 
 
 
-while (( status = ZwQuerySystemInformation(SystemFirmwareTableInformation, firmwareTableInfo, bufferSize, &tableSize) )  != STATUS_SUCCESS) {
+HardWare 정보는 Kernel Driver가 메모리에 Load된 호스트가 재부팅되어도, 원격지의 중앙서버(RUST)가 AGENT_ID가 정확한 호스트를 언제든지 가르키도록 하기 위한 **식별정보**입니다. <br>
 
-// 선 할당 해제
-ExFreePoolWithTag(firmwareTableInfo, 'RSMB');
-firmwareTableInfo = NULL;
+그렇기 때문에 이는 커널 내부 로직에서 SMBIOS를 쿼리하여 추출하고, 얻은 동적 버퍼 만큼 반복하여 정확하게 SMBIOS를 타입을 식별하여 가져오는 것이 중요합니다. <br>
 
-if (
-    (status == STATUS_INVALID_INFO_CLASS) ||
-    (status == STATUS_INVALID_DEVICE_REQUEST) ||
-    (status == STATUS_NOT_IMPLEMENTED) ||
-    (tableSize == 0)
-    ) {
-    //ExFreePoolWithTag(firmwareTableInfo, 'RSMB');
-    return STATUS_UNSUCCESSFUL;
-}
-else if (status == STATUS_BUFFER_TOO_SMALL) {
-    //ExFreePoolWithTag(firmwareTableInfo, 'RSMB');
-    firmwareTableInfo = (SYSTEM_FIRMWARE_TABLE_INFORMATION*)ExAllocatePoolWithTag(PagedPool, tableSize, 'RSMB');
-    if (!firmwareTableInfo) {
-        DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "SystemFirmwareTableInformation 쿼리 결과 -> STATUS_BUFFER_TOO_SMALL 이기에, 재할당했지만 메모리 공간 부족;\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+또한 SMBIOS를 가져왔다 한들, SMBIOS의 TYPE이 의미하는 것을 인지하고 있어야합니다. 여기서는 절대 변함이 없는 Hardware정보만을 수집하는 것이 목표로 두었기 때문에, 이는 TYPE-1 과 TYPE-2이 이에 해당될 수 있습니다. <br>
 
-    RtlZeroMemory(firmwareTableInfo, tableSize);
-    firmwareTableInfo->ProviderSignature = 'RSMB';
-    firmwareTableInfo->Action = SystemFirmwareTable_Get;
-    bufferSize = tableSize;  // bufferSize를 tableSize로 업데이트
-}
-else {
-    //ExFreePoolWithTag(firmwareTableInfo, 'RSMB');
-    return STATUS_UNSUCCESSFUL;
-}
-
-continue;
-
-}
-
-
-//쿼리 성공후 처리를 구현하라
-
-DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "SystemFirmwareTableInformation 쿼리 성공!\n");
+수집 된 정보는 커널의 **전역변수**인 **Driver_ID**변수에 저장되어, 중앙서버(RUST)와 최초 TCP세션을 맺을 때 초기에 전송하는 데이터입니다. 
 
 
 
-```
+------
+
