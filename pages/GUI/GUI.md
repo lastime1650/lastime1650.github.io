@@ -1,8 +1,8 @@
 ---
 layout: default
-title: AI_Server
-nav_order: 4
-permalink: /pages/AI_Server
+title: GUI
+nav_order: 6
+permalink: /pages/GUI
 has_children: true
 typora-root-url: ../../
 ---
