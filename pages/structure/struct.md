@@ -2,6 +2,7 @@
 layout: default
 title: structure
 nav_order: 2
+permalink: /pages/structure
 typora-root-url: ../../
 ---
 
