@@ -2,10 +2,19 @@
 layout: default
 title: Home
 nav_order: 1
-description: "Just the Docs is a responsive Jekyll theme with built-in search that is easily customizable and hosted on GitHub Pages."
+description: "1인 개발 AI기반 보안솔루션 가이드라인"
 permalink: /
 ---
 
+# AI 기반 맬웨어 보안 솔루션 문서
+
+이 문서는 2024년 2월부터 기획된 1인 개인프로젝트이며, 보안 솔루션 제품에 관한 가이드라인을 이 문서내에서 서술합니다.
+
+
+
+---
+
 {: .warning }
-> This is a *bare-minimum* template to create a Jekyll site that uses the [Just the Docs] theme. You can easily set the created site to be published on [GitHub Pages] – the [README] file explains how to do that, along with other details.
+
+> 이 경고창이 보이는 경우, 현재 프로젝트는 여전히 활동중임을 나타냅니다. 상시 **UPDATE**될 수 있으며 참고바랍니다.
 
