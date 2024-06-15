@@ -4,6 +4,7 @@ title: ObRegisterCallback_info
 nav_order: 4
 permalink: /pages/AGENT/ObRegisterCallback
 parent: AGENT
+has_children: true
 typora-root-url: ../../../
 ---
 
@@ -18,3 +19,6 @@ ObRegisterCallback 콜백함수는 모니터링을 하지않고, 데이터베이
 이들이 AGENT_ID를 통해 식별된 에이전트에서 특정 프로그램의 실행,제거등을 차단(Block)하려면 데이터베이스에 해당 정보를 저장해야합니다. 그렇게 하기 위해서는 중앙서버의 명령을 호출하여 대신 정보를 저장하게 합니다. <br>
 
 정보 저장이 성공된 경우, 즉시 **중앙서버는 AGENT_ID를 통하여 에이전트에게 보호조치 명령을 요청**하고 에이전트는 처리 결과를 위해 응답합니다. 
+
+
+
