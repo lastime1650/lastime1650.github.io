@@ -175,7 +175,7 @@ Socket으로 주고 받는 RAW_DATA포맷은 상황에 따라 다르지만 주�
 
 -----
 
-<br><br><br><br><br><br><br><br>
+
 
 ## AI 서버 
 
