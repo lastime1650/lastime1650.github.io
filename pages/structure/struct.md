@@ -83,7 +83,7 @@ Socket으로 주고 받는 RAW_DATA포맷은 상황에 따라 다르지만 주�
 
 
 
-{: .note-title }
+{: .important-title }
 
 >AGENT_ID ?
 >
@@ -93,7 +93,7 @@ Socket으로 주고 받는 RAW_DATA포맷은 상황에 따라 다르지만 주�
 
 
 
-{: .note-title }
+{: .important-title }
 
 >LICENSE_ID?
 >
@@ -103,7 +103,7 @@ Socket으로 주고 받는 RAW_DATA포맷은 상황에 따라 다르지만 주�
 
 
 
-{: .note-title }
+{: .important-title }
 
 >HARDWARE 정보?
 >
