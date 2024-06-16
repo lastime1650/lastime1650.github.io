@@ -46,8 +46,11 @@ DriverEntry()함수에서 실행될 때 최초 등록해야합니다. <br>
 
 또한 핸들러는 Ex가 들어간 콜백함수이기 때문에 세부적인 프로세스를 식별할 수 있는 인자가 제공됩니다. <br>
 
-`ㅇㅇㅇ
-ㅁㅁ`
+`if (!is_connected_2_SERVER) {
+	DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "PcreateProcessNotifyRoutineEx -> is_connected_2_SERVER 값: FALSE \n");
+	return;
+
+}`
 
 핸들러에서 모니터링된 정보를 저장하기 전에 
 
