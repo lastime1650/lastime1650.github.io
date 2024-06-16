@@ -39,11 +39,15 @@ DriverEntry()함수에서 실행될 때 최초 등록해야합니다. <br>
  먼저 모니터링하기 위해서 미리 구현된 핸들러 함수의 주소를 인수로 넘겨야합니다.
 
 `status = PsSetCreateProcessNotifyRoutineEx(PcreateProcessNotifyRoutineEx, FALSE);`
-`if (status != STATUS_SUCCESS) {//최초 프로세스 생성/제거 등록`
-	`DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "PsSetCreateProcessNotifyRoutineEx 등록실패 -> %p\n", status);`
-	`return STATUS_UNSUCCESSFUL;`
-`}`
-`DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "PsSetCreateProcessNotifyRoutineEx 등록성공 \n");`
 
+코드에서는 **PcreateProcessNotifyRoutineEx**이름으로 핸들러를 구현하였습니다.<br>
 
+`void PcreateProcessNotifyRoutineEx(PEPROCESS Process, HANDLE ProcessId, PPS_CREATE_NOTIFY_INFO CreateInfo)`
+
+또한 핸들러는 Ex가 들어간 콜백함수이기 때문에 세부적인 프로세스를 식별할 수 있는 인자가 제공됩니다. <br>
+
+`ㅇㅇㅇ
+ㅁㅁ`
+
+핸들러에서 모니터링된 정보를 저장하기 전에 
 
