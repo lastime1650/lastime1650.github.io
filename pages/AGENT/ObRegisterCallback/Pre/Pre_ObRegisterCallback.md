@@ -87,8 +87,61 @@ SHA256을 구하는 것은 파일 입출력을 사용하기 때문에, 무작정
 
 Create일때의 DesiredAccess 권한에서 **(& PROCESS_CREATE_PROCESS )** AND연산하여 일치하면 이 프로세스는 실제로 생성중인 상태를 의미하도록 세부적인 처리가 가능하도록 구현하였습니다.<br>
 
-그래서 먼저 커널내에서 전역변수에 저장된 **연결리스트**가 NULL인지,아닌지를 확인하고, <br>
+이제 보호조치가 필요한 프로세스인지 검증해야합니다.<br>
+
+먼저 커널내에서 전역변수에 저장된 **연결리스트**가 NULL인지,아닌지를 확인하고, <br>
+
+`PAction_for_process_creation_NODE ActionNode = Search_process_routine_NODE(Action_for_process_routine_node_Start_Address, (PUCHAR)SHA256);`<br>
 
 PID를 인수로 넘기면, Binary를 구하고 연결리스트의 **Head**부분부터 SHA256필드를 조회하여 **일치한 노드**를 반환하는 **Get_Action_Node_With_SHA256()**를 호출하도록 구현하였습니다. <br>
 
-여기서 반환값은 추출된 노드의 주소이거나 NULL입니다. 만약 여기서 NULL이 아닌 값이라면, 데이터베이스의 보호조치를 하라고 해석되므로, 추출된 노드의 필드에 저장된 값에 따라서 보호조치를 적용하라고 되어 있습니다. 
+여기서 반환값은 추출된 노드의 주소이거나 NULL입니다. 만약 여기서 NULL이 아닌 값이라면, 데이터베이스의 보호조치를 하라고 해석되므로, 추출된 노드의 필드에 저장된 값에 따라서 보호조치를 적용하라고 되어 있습니다. <br>
+
+### 보호조치는 어떻게 하는가?<br>
+
+
+
+```c
+if ((*OperationInformation)->Parameters->CreateHandleInformation.OriginalDesiredAccess & PROCESS_CREATE_PROCESS) { //       1/4	
+(*OperationInformation)->Parameters->CreateHandleInformation.DesiredAccess &= ~PROCESS_CREATE_PROCESS;
+
+if ((*OperationInformation)->Parameters->CreateHandleInformation.OriginalDesiredAccess & PROCESS_VM_OPERATION) {//      2/4
+    (*OperationInformation)->Parameters->CreateHandleInformation.DesiredAccess &= ~PROCESS_VM_OPERATION;
+}
+
+if ((*OperationInformation)->Parameters->CreateHandleInformation.OriginalDesiredAccess & PROCESS_VM_READ) {//      3/4
+    (*OperationInformation)->Parameters->CreateHandleInformation.DesiredAccess &= ~PROCESS_VM_READ;
+}
+
+if ((*OperationInformation)->Parameters->CreateHandleInformation.OriginalDesiredAccess & PROCESS_VM_WRITE) {//      4/4
+    (*OperationInformation)->Parameters->CreateHandleInformation.DesiredAccess &= ~PROCESS_VM_WRITE;
+}
+
+break;
+
+```
+위 코드에서 보다시피 Create 상태일때의 DesiredAccess에서 **&= ~**연산자를 통해 특정권한을 제거하는 것입니다. 그리고 다음과 같은 권한을 제거하도록 하였습니다<br>
+
+- PROCESS_CREATE_PROCESS
+- PROCESS_VM_OPERATION
+- PROCESS_VM_READ
+- PROCESS_VM_WRITE
+
+이렇게 구현하고 콜백함수를 빠져나가면 권한 부족에 따라 프로세스의 생성을 방지할 수 있습니다. <br>
+
+### 프로세스의 생성말고, 제거를 못하게 막을 수 있나?<br>
+
+
+
+```c
+if ((*OperationInformation)->Parameters->CreateHandleInformation.OriginalDesiredAccess & PROCESS_TERMINATE) { //        1/4
+(*OperationInformation)->Parameters->CreateHandleInformation.DesiredAccess &= ~PROCESS_TERMINATE;
+
+if ((*OperationInformation)->Parameters->CreateHandleInformation.OriginalDesiredAccess & PROCESS_VM_OPERATION) {//      2/4
+    (*OperationInformation)->Parameters->CreateHandleInformation.DesiredAccess &= ~PROCESS_VM_OPERATION;
+}
+```
+
+그렇습니다. 이 삭제하는 부분도 Create상태일 때에 포함돨 수 있습니다. 여기서는 **PROCESS_TERMINATE**가 DesiredAccess에 포함되면 이 프로세스가 제거하려고 하고 있음을 나타냅니다. <br>
+똑같이 **&= ~**연산으로 특정 권한을 제거하여 저장하면 됩니다. 
+
