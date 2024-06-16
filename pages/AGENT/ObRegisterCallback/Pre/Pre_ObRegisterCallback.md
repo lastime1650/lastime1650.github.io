@@ -46,6 +46,49 @@ typora-root-url: ../../../../
 
 이제 우리에게는 PID가 있습니다. <br>
 
-하지만,, 데이터베이스에서의 보호조치는 PID값이 존재하지 않습니다. 왜냐하면 PID는 메모리에 로드된 경우에만 유효하기 때문입니다.<br>
+하지만,, 데이터베이스에서의 보호조치 칼럼에는 PID값이 존재하지 않습니다. 왜냐하면 PID는 메모리에 로드된 경우에만 유효하기 때문입니다.<br>
 
 그래서 PID를 통하여 Binary를 구하고 최종적으로 **SHA256**문자열을 취득해야합니다. <br>
+
+
+
+```c
+
+if (OperationInformation->Operation == OB_OPERATION_HANDLE_CREATE) {
+    if (OperationInformation->Parameters->CreateHandleInformation.DesiredAccess & PROCESS_CREATE_PROCESS) {
+        /* 프로세스 생성 시,,, */
+
+        /*
+            프로세스 생성 시 Block 일 때,
+        */
+
+        // Action 노드 추출
+        if (Action_for_process_routine_node_Start_Address != NULL) {
+            DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "Process PreOperationCallback: Handle = %p, %llu\n", OperationInformation->Object, PID);
+
+            PAction_for_process_creation_NODE ActionNode = Get_Action_Node_With_SHA256(PID);// 하나의 노드를 가져오면 해당 프로그램의 프로세스에 대해 Action처리하면됨
+            if (ActionNode) {
+                DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "PRE _ ActionNode [Create] 찾음! - PID: %llu \n", PID);
+                Action_PROCESSING_on_RegisterCallback(ActionNode, &OperationInformation, Create);
+                DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "DesiredAccess -> %d \n\n", OperationInformation->Parameters->CreateHandleInformation.DesiredAccess);
+            }
+
+        }
+    }
+```
+
+<br>
+
+SHA256을 구하는 것은 파일 입출력을 사용하기 때문에, 무작정 구하고 보는 것은 추천하지 않았습니다. <br>
+
+그전에 먼저 OperationInformation->Operation값을 통하여 프로세스가 생성과 관련한 명령이 확인하고, 세부적으로 프로세스의 행동을 감지하기 위해,<br>
+
+`OperationInformation->Parameters->CreateHandleInformation.DesiredAccess`
+
+Create일때의 DesiredAccess 권한에서 **(& PROCESS_CREATE_PROCESS )** AND연산하여 일치하면 이 프로세스는 실제로 생성중인 상태를 의미하도록 세부적인 처리가 가능하도록 구현하였습니다.<br>
+
+그래서 먼저 커널내에서 전역변수에 저장된 **연결리스트**가 NULL인지,아닌지를 확인하고, <br>
+
+PID를 인수로 넘기면, Binary를 구하고 연결리스트의 **Head**부분부터 SHA256필드를 조회하여 **일치한 노드**를 반환하는 **Get_Action_Node_With_SHA256()**를 호출하도록 구현하였습니다. <br>
+
+여기서 반환값은 추출된 노드의 주소이거나 NULL입니다. 만약 여기서 NULL이 아닌 값이라면, 데이터베이스의 보호조치를 하라고 해석되므로, 추출된 노드의 필드에 저장된 값에 따라서 보호조치를 적용하라고 되어 있습니다. 
