@@ -26,3 +26,26 @@ typora-root-url: ../../../../
 
 ---
 
+## 기술적인 설명
+
+<br>
+
+먼저 Pre 콜백함수에서 호출이 되었을 때, 인자의 OperationInformation->ObjectType 필드의 값이 **PsProcessType**인지 검증해야합니다.<br>
+
+
+
+```c
+  if (OperationInformation->ObjectType == *PsProcessType) {
+     PEPROCESS PRE_eprocess = OperationInformation->Object;
+     HANDLE PID = PsGetProcessId(PRE_eprocess);
+```
+
+검증을 할 때, OperationInformation->Object 값은 **EPROCESS**의 포인터 구조체가 됩니다.<br>
+
+그런다음에는 여기서 현재 메모리에 로드된 프로그램을 식별하기 위하여 **PsGetProcessID** Native API를 이용하여 PID를 추출해야합니다.<br>
+
+이제 우리에게는 PID가 있습니다. <br>
+
+하지만,, 데이터베이스에서의 보호조치는 PID값이 존재하지 않습니다. 왜냐하면 PID는 메모리에 로드된 경우에만 유효하기 때문입니다.<br>
+
+그래서 PID를 통하여 Binary를 구하고 최종적으로 **SHA256**문자열을 취득해야합니다. <br>
