@@ -31,3 +31,19 @@ DriverEntry()함수에서 실행될 때 최초 등록해야합니다. <br>
 
 
 그리고 이 정보는 각각 순차적으로 노드를 생성하여 연결리스트를 만듭니다. 이 연결리스트는 **전역변수에 "길이-기반"형태**로 저장되다가,중앙서버의 요청이 있기 전까지 보관되며, 장기간 방치된 경우 DISK에 저장됩니다.
+
+---
+
+## 기술적인 설명<br>
+
+ 먼저 모니터링하기 위해서 미리 구현된 핸들러 함수의 주소를 인수로 넘겨야합니다.
+
+`status = PsSetCreateProcessNotifyRoutineEx(PcreateProcessNotifyRoutineEx, FALSE);`
+`if (status != STATUS_SUCCESS) {//최초 프로세스 생성/제거 등록`
+	`DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "PsSetCreateProcessNotifyRoutineEx 등록실패 -> %p\n", status);`
+	`return STATUS_UNSUCCESSFUL;`
+`}`
+`DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "PsSetCreateProcessNotifyRoutineEx 등록성공 \n");`
+
+
+
