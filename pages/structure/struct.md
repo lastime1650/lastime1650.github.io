@@ -206,5 +206,76 @@ Mysql 쿼리가 가능한 MariaDB로 구축하였습니다.
 
 ----
 
+## 길이기반 데이터 포맷  ( Length-Based  _ RawData)
+
+## <br>
+
+이 포맷은 **네트워크 간 버퍼 공유** 인 Socket통신에서 **프로그래밍 언어를 불문**하고 모든 언어에서 해석될 수 있는 데이터 형식입니다.<br>
+
+이는 프로토콜을 정의한 것이 아니며, RAW데이터 단에서 유의미한 데이터를 **길이라는 개념**을 도입하여 항상 동적의 길이를 가진 데이터를 **자동화 파싱**을 위해 설계한 것입니다.<br>
+
+더 나아가서 **확장된 길이기반 형식**이 있습니다. 이는 일반적인 길이기반 형식과 다르게, **다양한 의미를 가지는 길이기반 형식**으로, 쉽게 이해하자면, 일반적인 길이기반 포맷이 **여러개**존재한다라고 보면 됩니다. <br><br>
 
 
+
+이 형식의 기본 구조는 2가지로 나뉩니다. 
+
+1. 동적길이를 정의하는 고정된 길이 값과 동적길이의 데이터
+2. **고정된 명령헤더**와 동적길이를 정의하는 고정된 길이 값과 동적길이의 데이터
+
+<br>
+
+(1)의 구조는 이론을 설명하기 위한 단순한 형태입니다. <br>
+
+처음에는 **동적길이를 정의하는 고정된 길이 값**이라는 용어가 존재하는데, 이는 실제로 전송할 동적데이터의 "길이"를 의미하는 것입니다. <br>
+
+그렇기 때문에 여기서 구현할 때는 4Byte로 정의하여 4Byte내에서 표현가능한 수만큼 동적데이터를 전달할 수 있는 것이 됩니다. <br>
+
+또한 그 다음 주소부터는 무조건 그 길이만큼 동적 데이터가 위치해야합니다. <br>
+
+그러나, 길이 전체 이해하지 못하는 C언어가 있습니다. 이는 따로 길이를 알려줘야하는데, 소켓버퍼를 받을 때, 버퍼의 끝을 따로 알려줘야하는 문제가 있습니다. 그렇기 때문에, 맨 뒷 부분에 여기서는 **동적길이를 정의하는 고정된 길이의 크기Byte**길이 만큼의 Tail을 붙여줘야합니다. <br>
+
+예를 들어 저는 4Byte로 고정되게 하였고, 최대 표현가능한 수 만큼 동적 데이터를 전달할 수 있습니다.(동적데이터 개/당)그리고 이를 무한히 반복할 때, 멈추기 위해서 **4Byte길이의 임의의 Tail Byte**값을 맨뒤에 저장합니다. 이 Byte를 디코딩하면 "_END" 라는 문자열이 생깁니다. <br>
+
+{: .note }
+
+파싱된 데이터를 관리하기 위해서는 각 언어에 따라서 알아서 저장해야합니다. <br>
+
+파이썬의 경우는 list, <br>
+
+RUST의 경우에는 Vec< u8 > <br>
+
+C의 경우에는 연결리스트가 될 수 있습니다.
+
+<br><br>
+
+여기서 왜 **고정된 길이를 나타내는 크기 Byte**와  **맨 뒷부분의 Byte**가 일치해야하냐는 점입니다. <br>
+
+이러한 이유는 "자동화 파싱"때문입니다. 4byte가 자리하는 부분은 동적데이터의 길이를 나타내는 Byte값뿐만 아닌, 이것이 끝인지 판단하는데에 사용되기 때문입니다.<br>
+
+```python
+    def Parsing_for_loop(self, DATA:bytes, start_index:int = 4, last_index:int = 8)->list: #파싱 과정중에서 반복적 작업이 필요한 경우가 있음
+        Return_bytes_list = []
+        while True:
+            if DATA[start_index:last_index] == "_END".encode()[start_index:last_index]:
+                return Return_bytes_list
+            else:
+                #print(DATA[start_index:last_index])
+                RAW_DATA_len:int = self.byte_to_int( DATA[start_index:last_index] ) # Raw_data 길이 추출
+                #print(RAW_DATA_len)
+
+                start_index = last_index
+                last_index = last_index + RAW_DATA_len
+                RAW_DATA:bytes =  DATA[start_index:last_index] # Raw_data 가져옴
+                Return_bytes_list.append( RAW_DATA )
+
+
+                start_index = last_index
+                last_index = last_index + 4 # 다음을 위해 4바이트 이동
+```
+
+위 코드는 파이썬의 AI_Server에 구현된 **길이기반 형식 자동화 파싱 메서드**입니다. <br><br>
+
+(2)는 **고정된 명령헤더**라고 칭하였습니다. 이는 (1)에서 정의한 **고정된 길이 값의 Byte길이**와 같은 Byte길이로 정의할 필요가 없습니다. 어차피 이는 맨 앞의 Header를 의미하고, **Header다음부터는 길이 Byte**가 위치하기 때문입니다. <br>
+
+이 명령헤더는 **길이기반의 형식의 모든 데이터가 무엇을 의미하는 지 해석**하는데 사용됩니다.
