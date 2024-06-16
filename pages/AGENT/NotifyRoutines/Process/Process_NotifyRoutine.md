@@ -180,7 +180,7 @@ ULONG32 TYPE = (ULONG32)process_routine; // 타입명시
 Send_or_Save(SAVE_RAW_DATA, &TYPE, &(PUCHAR)A_node, &NODE_SIZE, NONE);
 ```
 
-위 코드는 중앙서버가 자동 파싱을 위해 저장하는 TYPE과, 모니터링된 다양한 정보를 취합하여 전역변수에 최종 저장하거나, 중앙서버에 전달하는 **Send_or_Save()**함수가 있습니다. <br>
+위 코드는 중앙서버가 자동 파싱을 위해 저장하는 TYPE과, 모니터링된 다양한 정보를 취합하여 전역변수에 최종 저장하고 중앙서버에 전달하는 **Send_or_Save()**함수가 있습니다. <br>
 
 이 함수의 과정을 설명드리면 다음과 같습니다.<br>
 
