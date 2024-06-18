@@ -107,12 +107,26 @@ typedef struct _KSOCKET
 
 wsk으로 통신하면 IRP 요청으로 패킷의 수신이나 송신 상태를 무조건 받아 처리해야하는 **KSOCKET_ASYNC_CONTEXT**  구조체와 소켓을 구성하는 WSK_SOCKET, Dispatch, 상호배제를 위한 뮤텍스가 필드에 존재하고 있으며, 이는 송수신 과정에서 필요한 데이터들을 담았다고 생각하면 됩니다.<br>
 
-```
+```c
 /*초기화*/
 KeInitializeEvent(&(((PKSOCKET)(*NewSocket_parm))->AsyncContext.CompletionEvent), SynchronizationEvent, FALSE); // 이벤트 초기화
 
 KeInitializeMutex(&(((PKSOCKET)(*NewSocket_parm))->Mutex), 0);
 
+((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp = IoAllocateIrp(1, FALSE); // IRP초기화 
+if (((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp == NULL) {
+    ExFreePoolWithTag(((PKSOCKET)(*NewSocket_parm)), 'ABCD');
+    return STATUS_UNSUCCESSFUL;
+}
+
+IoSetCompletionRoutine( // IRP 콜백루틴 적용
+    ((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp,
+    &KspAsyncContextCompletionRoutine,
+    &(((PKSOCKET)(*NewSocket_parm))->AsyncContext.CompletionEvent),
+    TRUE,
+    TRUE,
+    TRUE
+);
 ```
 
 초기화 코드 부분입니다. <br>
@@ -127,11 +141,9 @@ Socket으로 통신할 때, 정상적으로 송신되었는 지, 또는 수신�
 
 ```c
 
-((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp = IoAllocateIrp(1, FALSE); // IRP초기화 
-if (((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp == NULL) {
-    ExFreePoolWithTag(((PKSOCKET)(*NewSocket_parm)), 'ABCD');
-    return STATUS_UNSUCCESSFUL;
-}
+
+
+IoReuseIrp(((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp, STATUS_UNSUCCESSFUL);
 
 IoSetCompletionRoutine( // IRP 콜백루틴 적용
     ((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp,
@@ -189,6 +201,95 @@ WskSocket API를 호출하는 단계에서 이에 대한 반환 값이 STATUS_PE
 
 IRP초기화 -> IRP콜백함수 정의 -> WSK API호출 -> PENDING 응답인 경우 KEVENT로 스레드 중단 -> IRP콜백함수에서 KeSetEvent() 호출할 때까지 대기 -> 스레드 재개될 때, IoStatus.Status값으로 최종 결과 확인
 
-
-
 <br>
+
+```c
+IoReuseIrp(((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp, STATUS_UNSUCCESSFUL);
+
+IoSetCompletionRoutine(
+    ((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp,
+    &KspAsyncContextCompletionRoutine,
+    &(((PKSOCKET)(*NewSocket_parm))->AsyncContext.CompletionEvent),
+    TRUE,
+    TRUE,
+    TRUE
+);
+
+/*TCP 보내기 전 세션 중 서버로부터 받기 준비 세팅 */
+SOCKADDR_IN LocalAddress;
+LocalAddress.sin_family = AF_INET;
+LocalAddress.sin_addr.s_addr = INADDR_ANY;
+LocalAddress.sin_port = 0;
+
+status = ((PKSOCKET)(*NewSocket_parm))->WskConnectionDispatch->WskBind(
+    ((PKSOCKET)(*NewSocket_parm))->WskSocket,          // Socket
+    (PSOCKADDR)&LocalAddress,   // LocalAddress
+    0,                          // Flags (reserved)
+    ((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp    // Irp
+);
+/*이벤트 대기 해야하는지 확인*/
+if (status == STATUS_PENDING) {
+    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "STATUS_PENDING ...");
+    KeWaitForSingleObject(
+        &(((PKSOCKET)(*NewSocket_parm))->AsyncContext.CompletionEvent),
+        Executive,
+        KernelMode,
+        FALSE,
+        NULL
+    );
+
+    status = ((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp->IoStatus.Status;
+}
+/*소켓 제작 마무리*/
+if (!NT_SUCCESS(status))
+{
+    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "바인딩 실패!");
+    return STATUS_UNSUCCESSFUL;
+}
+```
+
+다음은 Bind을 구현합니다. 이는 UDP와 다르게 TCP는 신뢰성이므로, 서버의 ACK도 받아서 처리되어야 합니다. <br>
+
+단, 에이전트는 절대 TCP 서버 Socket이 되는 것이 아닙니다. Socket에서의 IP Address를 정의할 때 사용하는 SOCKADDR_IN 구조체에서 port를 0으로 하고 있으며, **LocalAddress.sin_port = 0;** . LocalAddress.sin_addr.s_addr 의 값을 **ANY**로 구성하여 Bind하는 것을 확인할 수 있습니다. <br>
+
+```c
+// 재사용 초기화 생략...
+
+SOCKADDR_IN RemoteAddress;
+
+ RemoteAddress.sin_addr.S_un.S_un_b.s_b1 = (UCHAR)ip_byte[0]; //A
+ RemoteAddress.sin_addr.S_un.S_un_b.s_b2 = (UCHAR)ip_byte[1]; //B
+ RemoteAddress.sin_addr.S_un.S_un_b.s_b3 = (UCHAR)ip_byte[2]; //C
+ RemoteAddress.sin_addr.S_un.S_un_b.s_b4 = (UCHAR)ip_byte[3]; //D
+
+ RemoteAddress.sin_family = AF_INET; // IPv4
+ RemoteAddress.sin_port = RtlUshortByteSwap(Server_port); // Port 번호ㅇ
+
+ status = ((PKSOCKET)(*NewSocket_parm))->WskConnectionDispatch->WskConnect(
+     ((PKSOCKET)(*NewSocket_parm))->WskSocket,          // Socket
+     (PSOCKADDR)&RemoteAddress,     // RemoteAddress
+     0,                             // Flags (reserved)
+     ((PKSOCKET)(*NewSocket_parm))->AsyncContext.Irp    // Irp
+ );
+ 
+ //  생략..
+```
+
+ 
+
+이번에는 WskConnect API를 이용하여 최초 중앙서버에 TCP요청을 시도하는 코드입니다. SOCKADDR_IN 구조체에 중앙서버의 IP와 PORT를 알맞게 저장하고 API 인자에 집어넣습니다. <br>
+
+
+
+이 과정까지 완료되어 최종적으로 **STATUS_SUCCESS** 를 반환받았다면 지금부터 중앙서버와 TCP 세션을 통하여 데이터를 송수신할 수 있습니다. WskSend, WskReceive를 잘 활용하고, 데이터를 전달하거나 받을 때는 
+
+```c
+ WSK_BUF WskBuffer;
+ WskBuffer.Offset = 0;
+ WskBuffer.Length = Buffer_size;
+ WskBuffer.Mdl = IoAllocateMdl(Buffer, (ULONG)WskBuffer.Length, FALSE, FALSE, NULL);
+
+// 해제는 IoFreeMdl()
+```
+
+WSK_BUF 구조체를 활용하고, IoAllocateMdl API를 이용하여 버퍼를 구성하여 올바르게 데이터를 전송하거나 받도록 하면 됩니다. 
