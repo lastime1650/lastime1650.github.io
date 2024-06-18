@@ -288,6 +288,6 @@ Mysql 쿼리가 가능한 MariaDB로 구축하였습니다.
 
 <br>
 
-이를 체험할 수 있는 깃허브를 만들었습니다.<br>
+이를 체험할 수 있는 레포지토리를 만들었습니다.<br>
 
-체험하기](https://github.com/lastime1650/Length_Based_Dynamic_Socket_Buffer){: .btn }
+[체험하기](https://github.com/lastime1650/Length_Based_Dynamic_Socket_Buffer){: .btn }
