@@ -29,25 +29,11 @@ typora-root-url: ../../../
 Winsock에서도 커널을 사용할 수 있도록 Microsoft에서 모듈을 구현하였습니다.  <br>
 또한 이 코드의 레퍼런스는 다음 [Github](https://github.com/wbenny/KSOCKET?tab=readme-ov-file) 주소를 사용하였습니다.
 
+<br><br>
 
 
-실제 API를 사용할 때는 줄여서 wsk으로 표현되어 사용됩니다. <br>
 
-먼저 WSK의 개체는 총 2가지로 구성되어 있습니다. <br>
-
-1. WSK_CLIENT
-2. WSK_SOCKET 
-
-```c
-typedef struct _WSK_CLIENT_NPI {
-    PVOID                        ClientContext;
-    CONST WSK_CLIENT_DISPATCH   *Dispatch;
-} WSK_CLIENT_NPI, *PWSK_CLIENT_NPI;
-```
-
-여기서는 에이전트가 중앙서버에 TCP 통신하는 입장이므로, WSK_CLIENT 개체로 선택되었습니다. <br>
-
-이후 WskSocket API를 통해 **SOCK_STREAM** 소켓 객체를 생성하여 중앙서버에게 TCP 요청을 하는 방법을 간략히 설명합니다.<br><br>
+WskSocket API를 통해 **SOCK_STREAM** 소켓 객체를 생성하여 중앙서버에게 TCP 요청을 하는 방법을 간략히 설명합니다.<br><br>
 
 ```c
 WSK_CLIENT_DISPATCH  WskDispatch = { MAKE_WSK_VERSION(1,0), 0, NULL };
