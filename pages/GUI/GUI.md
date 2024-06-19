@@ -17,7 +17,7 @@ typora-root-url: ../../
 
 TKinter모듈을 이용하여 에이전트를 원격으로 관리하는 어플리케이션을 구축하였습니다.<br>
 
-먼저, [LICENSE_ID](https://lastime1650.github.io/pages/structure#%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8-agent)를 입력하게 하여 중앙서버와 연결시 GUI_ID를 포함하여 전달하여 관리자를 식별하고, 이에 따라 관리자가 GUI 프로그램으로 에이전트를 관리하겠다는 의미를 중앙서버에서 식별토록 합니다. <br>
+먼저, [LICENSE_ID](https://lastime1650.github.io/pages/structure#%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8-agent) ,  GUI_ID를 포함하여 중앙서버에게 전달해야합니다. 이는 관리자를 식별하고, 이에 따라 관리자가 GUI 프로그램으로 에이전트를 관리하겠다는 의미를 중앙서버에서 식별토록 합니다. <br>
 
 연결 된 후, GUI 프로그램은 중앙서버에게 LICENSE_ID를 기준으로 묶인 AGENT_ID를 가져오도록 요청합니다. 이는 [**길이-기반**](https://lastime1650.github.io/pages/structure#%EA%B8%B8%EC%9D%B4%EA%B8%B0%EB%B0%98-%EB%8D%B0%EC%9D%B4%ED%84%B0-%ED%8F%AC%EB%A7%B7---length-based--_-rawdata)으로 요청하는 형태입니다.<br>
 
