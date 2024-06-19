@@ -21,7 +21,7 @@ typora-root-url: ../../
 
 ## 기술적인 설명<br>
 
-이 AI 서버로직은 저의 깃허브에서 구현되었고, 코드가 Open되어 있습니다. <br>
+이 AI 처리 코드는 저의 레포지토리에서 구현되었고, 코드 및 설명, 릴리즈가 오픈되어 있습니다. <br>
 
 [AI기반 맬웨어 탐지 코드 보러가기!!!!!](https://github.com/lastime1650/AI_based_Malware_Detection_with_VirusTotal_and_MalwareBazaar){: .btn .btn-green .mr-4 }
 
